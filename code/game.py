@@ -19,11 +19,8 @@ class Game:
 
         # tetromino
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(ROWS)]
-        init_shape = random.choice(list(TETROMINOS.keys()))
-        self.tetromino = Tetromino(init_shape,
-                                   self.sprites,
-                                   self.create_new_tetromino,
-                                   self.field_data)
+        # intialize tetromino
+        self.create_new_tetromino()
 
         # timers
         self.timers = {
@@ -34,7 +31,10 @@ class Game:
         self.timers['horizontal move'].activate()
 
     def create_new_tetromino(self):
+        self.check_finished_rows()
+
         random_shape = random.choice(list(TETROMINOS.keys()))
+        random_shape = 'O'
         self.tetromino = Tetromino(random_shape,
                                    self.sprites,
                                    self.create_new_tetromino,
@@ -46,6 +46,30 @@ class Game:
 
     def move_tetromino_down(self):
         self.tetromino.move_down(1)
+
+    def check_finished_rows(self):
+        rows_to_remove = []
+        for i, row in enumerate(self.field_data):
+            if all(row):
+                rows_to_remove.append(i)
+
+        for delete_row in rows_to_remove:
+            for block in self.field_data[delete_row]:
+                block.kill()
+            # moving down blocks
+            for row in self.field_data:
+                for block in row:
+                    if block and block.pos.y < delete_row:
+                        block.pos.y += 1
+
+            # rebuild field data
+            self.field_data = [[0 for x in range(COLUMNS)] for y in range(ROWS)]
+            for block in self.sprites:
+                self.field_data[int(block.pos.y)][int(block.pos.x)] = block
+
+
+
+
 
     def draw_grid(self):
         for col in range(1, COLUMNS):
