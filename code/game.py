@@ -25,8 +25,13 @@ class Game:
         self.create_new_tetromino()
 
         # timers
+        self.down_speed = UPDATE_START_SPEED
+        self.down_speed_fastmode = self.down_speed * 0.3
+        self.down_fastmode = False
+
+
         self.timers = {
-            'vertical move': Timer(UPDATE_START_SPEED, repeated=True, func=self.move_tetromino_down),
+            'vertical move': Timer(self.down_speed, repeated=True, func=self.move_tetromino_down),
             'horizontal move': Timer(MOVE_WAIT_TIME, repeated=False),
             'rotate' : Timer(ROTATE_WAIT_TIME, repeated=False)
         }
@@ -101,6 +106,18 @@ class Game:
                 self.tetromino.rotate()
                 self.timers['rotate'].activate()
 
+        # check for speed up
+        if not self.down_fastmode and pygame.key.get_pressed()[pygame.K_DOWN]:
+            self.down_fastmode = True
+            self.timers['vertical move'].duration = self.down_speed_fastmode
+        if self.down_fastmode and not pygame.key.get_pressed()[pygame.K_DOWN]:
+            self.down_fastmode = False
+            self.timers['vertical move'].duration = self.down_speed
+
+
+
+
+
     def run(self):
         # update
         self.input()
@@ -153,7 +170,6 @@ class Tetromino():
         return any(collision_list)
 
     def rotate(self):
-        print('rotate')
         if self.shape != 'O':
 
             # get pivot point center (first block is always center)
