@@ -4,7 +4,7 @@ from timer import Timer
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, get_next_shape):
         # general setup
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
@@ -18,6 +18,8 @@ class Game:
         self.line_surface.set_alpha(120)
 
         # tetromino
+        self.get_next_shape = get_next_shape
+
         self.field_data = [[0 for x in range(COLUMNS)] for y in range(ROWS)]
         # intialize tetromino
         self.create_new_tetromino()
@@ -35,8 +37,8 @@ class Game:
     def create_new_tetromino(self):
         self.check_finished_rows()
 
-        random_shape = random.choice(list(TETROMINOS.keys()))
-        self.tetromino = Tetromino(random_shape,
+        shape = self.get_next_shape()
+        self.tetromino = Tetromino(shape,
                                    self.sprites,
                                    self.create_new_tetromino,
                                    self.field_data)
@@ -112,7 +114,7 @@ class Game:
         self.draw_grid()
         self.display_surface.blit(self.surface, (PADDING, PADDING))
 
-        pygame.draw.rect(self.display_surface, LINE_COLOR, self.rect, width=2)
+        pygame.draw.rect(self.display_surface, LINE_COLOR, self.rect, width=2, border_radius=2)
 
 
 class Tetromino():
