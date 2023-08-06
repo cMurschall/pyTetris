@@ -25,16 +25,17 @@ class Game:
         # timers
         self.timers = {
             'vertical move': Timer(UPDATE_START_SPEED, repeated=True, func=self.move_tetromino_down),
-            'horizontal move': Timer(MOVE_WAIT_TIME, repeated=False)
+            'horizontal move': Timer(MOVE_WAIT_TIME, repeated=False),
+            'rotate' : Timer(ROTATE_WAIT_TIME, repeated=False)
         }
         self.timers['vertical move'].activate()
         self.timers['horizontal move'].activate()
+        self.timers['rotate'].activate()
 
     def create_new_tetromino(self):
         self.check_finished_rows()
 
         random_shape = random.choice(list(TETROMINOS.keys()))
-        random_shape = 'O'
         self.tetromino = Tetromino(random_shape,
                                    self.sprites,
                                    self.create_new_tetromino,
@@ -82,13 +83,21 @@ class Game:
         self.surface.blit(self.line_surface, (0, 0))
 
     def input(self):
+        
         if not self.timers['horizontal move'].active:
+            # check for movement
             if pygame.key.get_pressed()[pygame.K_LEFT]:
                 self.tetromino.move_horizontal(-1)
                 self.timers['horizontal move'].activate()
             if pygame.key.get_pressed()[pygame.K_RIGHT]:
                 self.tetromino.move_horizontal(1)
                 self.timers['horizontal move'].activate()
+        
+            # check for rotation
+        if not self.timers['rotate'].active:
+            if pygame.key.get_pressed()[pygame.K_UP]:
+                self.tetromino.rotate()
+                self.timers['rotate'].activate()
 
     def run(self):
         # update
@@ -113,6 +122,7 @@ class Tetromino():
         self.create_new_tetromino = create_new_tetromino
         self.block_positions = TETROMINOS[shape]['shape']
         self.color = TETROMINOS[shape]['color']
+        self.shape = shape
 
         # create blocks
         self.blocks = [Block(group, pos, self.color) for pos in self.block_positions]
@@ -139,6 +149,34 @@ class Tetromino():
     def next_move_vertical_collides(self, blocks, offset):
         collision_list = [block.vertical_collide(int(block.pos.y + offset), self.field_data) for block in blocks]
         return any(collision_list)
+
+    def rotate(self):
+        print('rotate')
+        if self.shape != 'O':
+
+            # get pivot point center (first block is always center)
+            pivot_pos = self.blocks[0].pos
+
+            # get new block positions
+            new_block_positions = [block.rotate(pivot_pos) for block in self.blocks]
+
+            # check if new block positions collide
+            for pos in new_block_positions:
+                # horizontal collision
+                if pos.x < 0 or pos.x >= COLUMNS:
+                    return
+
+                # vertical / floor check
+                if pos.y >= ROWS:
+                    return
+
+                # field collision
+                if self.field_data[int(pos.y)][int(pos.x)]:
+                    return
+
+            # if no collision, set new block positions
+            for i, block in enumerate(self.blocks):
+                block.pos = new_block_positions[i]
 
 
 class Block(pygame.sprite.Sprite):
@@ -169,3 +207,13 @@ class Block(pygame.sprite.Sprite):
         if y_pos >= 0 and field_data[y_pos][int(self.pos.x)]:
             return True
         return False
+
+    def rotate(self, pivot_pos):
+        # get relative position to pivot point
+        relative_pos = self.pos - pivot_pos
+        # rotate
+        new_relative_pos = pygame.Vector2(relative_pos.y, -relative_pos.x)
+        # get new position
+        new_pos = new_relative_pos + pivot_pos
+
+        return new_pos
