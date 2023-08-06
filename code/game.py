@@ -5,6 +5,14 @@ from timer import Timer
 
 class Game:
     def __init__(self, get_next_shape):
+
+        # score
+        self.current_level = 1
+        self.current_score = 0
+        self.current_lines = 0
+
+
+
         # general setup
         self.surface = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
         self.display_surface = pygame.display.get_surface()
@@ -29,15 +37,25 @@ class Game:
         self.down_speed_fastmode = self.down_speed * 0.3
         self.down_fastmode = False
 
-
         self.timers = {
             'vertical move': Timer(self.down_speed, repeated=True, func=self.move_tetromino_down),
             'horizontal move': Timer(MOVE_WAIT_TIME, repeated=False),
-            'rotate' : Timer(ROTATE_WAIT_TIME, repeated=False)
+            'rotate': Timer(ROTATE_WAIT_TIME, repeated=False)
         }
         self.timers['vertical move'].activate()
         self.timers['horizontal move'].activate()
         self.timers['rotate'].activate()
+
+
+
+    def calculate_score(self, lines):
+        if lines > 0:
+            self.current_lines += lines
+            self.current_score += SCORE_DATA[lines] * self.current_level
+
+            if self.current_lines / 10 > self.current_level:
+                self.current_level += 1
+                # self.down_speed *= 0.8
 
     def create_new_tetromino(self):
         self.check_finished_rows()
@@ -75,9 +93,8 @@ class Game:
             for block in self.sprites:
                 self.field_data[int(block.pos.y)][int(block.pos.x)] = block
 
-
-
-
+        # update score
+        self.calculate_score(len(rows_to_remove))
 
     def draw_grid(self):
         for col in range(1, COLUMNS):
@@ -90,7 +107,7 @@ class Game:
         self.surface.blit(self.line_surface, (0, 0))
 
     def input(self):
-        
+
         if not self.timers['horizontal move'].active:
             # check for movement
             if pygame.key.get_pressed()[pygame.K_LEFT]:
@@ -99,7 +116,7 @@ class Game:
             if pygame.key.get_pressed()[pygame.K_RIGHT]:
                 self.tetromino.move_horizontal(1)
                 self.timers['horizontal move'].activate()
-        
+
             # check for rotation
         if not self.timers['rotate'].active:
             if pygame.key.get_pressed()[pygame.K_UP]:
@@ -113,10 +130,6 @@ class Game:
         if self.down_fastmode and not pygame.key.get_pressed()[pygame.K_DOWN]:
             self.down_fastmode = False
             self.timers['vertical move'].duration = self.down_speed
-
-
-
-
 
     def run(self):
         # update

@@ -44,6 +44,8 @@ class Main:
             self.display_surface.fill(GRAY)
 
             self.game.run()
+
+            self.update_score()
             self.score.run()
             self.preview.run(self.next_shapes)
 
@@ -52,6 +54,8 @@ class Main:
             pygame.display.update()
             self.clock.tick()
 
+    def update_score(self):
+        self.score.update_score(self.game.current_score, self.game.current_lines, self.game.current_level)
 
 if __name__ == '__main__':
     main = Main()
