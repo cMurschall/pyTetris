@@ -20,13 +20,14 @@ class Timer:
 
     def update(self):
         current_time = pygame.time.get_ticks()
-        if current_time - self.start_time >= self.duration and self.active:
-            if self.func:
-                self.func()
+        if self.active:
+            if current_time - self.start_time >= self.duration:
+                if self.func:
+                    self.func()
 
-            # reset the timer
-            self.deactivate()
+                # reset the timer
+                self.deactivate()
 
-            # if the timer is repeated, activate it again
-            if self.repeated:
-                self.activate()
+                # if the timer is repeated, activate it again
+                if self.repeated:
+                    self.activate()
