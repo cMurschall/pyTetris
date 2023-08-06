@@ -34,8 +34,7 @@ class Game:
             timer.update()
 
     def move_tetromino_down(self):
-        print('move down')
-        self.tetromino.move_down()
+        self.tetromino.move_down(1)
 
     def draw_grid(self):
         for col in range(1, COLUMNS):
@@ -81,13 +80,24 @@ class Tetromino():
         # create blocks
         self.blocks = [Block(group, pos, self.color) for pos in self.block_positions]
 
-    def move_down(self):
-        for block in self.blocks:
-            block.pos.y += 1
+    def move_down(self, offset):
+        if not self.next_move_vertical_collides(self.blocks, offset):
+            for block in self.blocks:
+                block.pos.y += offset
 
     def move_horizontal(self, offset):
-        for block in self.blocks:
-            block.pos.x += offset
+        if not self.next_move_horizontal_collides(self.blocks, offset):
+            for block in self.blocks:
+                block.pos.x += offset
+
+    # collisions
+    def next_move_horizontal_collides(self, blocks, offset):
+        collision_list = [block.horizontal_collide(int(block.pos.x + offset)) for block in blocks]
+        return any(collision_list)
+
+    def next_move_vertical_collides(self, blocks, offset):
+        collision_list = [block.vertical_collide(int(block.pos.y + offset)) for block in blocks]
+        return any(collision_list)
 
 
 class Block(pygame.sprite.Sprite):
@@ -103,3 +113,12 @@ class Block(pygame.sprite.Sprite):
 
     def update(self):
         self.rect.topleft = self.pos * CELL_SIZE
+
+
+    def horizontal_collide(self, x_pos):
+        return not 0 <= x_pos < COLUMNS
+
+
+    def vertical_collide(self, y_pos):
+        return y_pos >= ROWS
+
